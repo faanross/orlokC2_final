@@ -1,24 +1,19 @@
 package main
 
 import (
-	"github.com/go-chi/chi/v5"
 	"log"
-	"net/http"
-	"orlokC2_final/internal/router"
+	"orlokC2_final/internal/factory"
 )
 
 const serverAddr = ":7777"
 
 func main() {
+	listenerFactory := factory.NewListenerFactory()
 
-	r := chi.NewRouter()
+	l := listenerFactory.CreateListener(serverAddr)
 
-	router.SetupRoutes(r)
-
-	log.Printf("Starting HTTP server on %v", serverAddr)
-
-	err := http.ListenAndServe(serverAddr, r)
+	err := l.Start()
 	if err != nil {
-		log.Fatalf("Server error: %v", err)
+		log.Printf("Error starting listener: %s\n", err)
 	}
 }
