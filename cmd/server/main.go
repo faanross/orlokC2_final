@@ -5,15 +5,21 @@ import (
 	"orlokC2_final/internal/factory"
 )
 
-const serverAddr = ":7777"
+var serverAddr = []string{":7777", ":8888", ":9999"}
 
 func main() {
 	listenerFactory := factory.NewListenerFactory()
 
-	l := listenerFactory.CreateListener(serverAddr)
+	for _, addr := range serverAddr {
 
-	err := l.Start()
-	if err != nil {
-		log.Printf("Error starting listener: %s\n", err)
+		l := listenerFactory.CreateListener(addr)
+
+		go func(l *factory.Listener) {
+			err := l.Start()
+			if err != nil {
+				log.Printf("Error starting %s: %s\n", l.ID, err)
+			}
+		}(l)
 	}
+	select {}
 }
