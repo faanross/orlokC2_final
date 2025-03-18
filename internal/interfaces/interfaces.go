@@ -1,25 +1,17 @@
-package factory
+package interfaces
 
-type ProtocolType int
-
-const (
-	H1C ProtocolType = iota + 1
-	H1TLS
-	H2C
-	H2TLS
-	H3
-)
+import "orlokC2_final/internal/listener"
 
 // Listener interface defines methods that all listener types must implement
 type Listener interface {
 	Start() error
 	Stop() error
 	GetProtocol() string
-	GetPort() string
+	GetAddr() string
 	GetID() string
 }
 
 // ListenerFactory interface defines methods for creating listeners
 type ListenerFactory interface {
-	CreateListener(id string, port string) (Listener, error)
+	CreateListener(addr string) *listener.ConcreteListener
 }

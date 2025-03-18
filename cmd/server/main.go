@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"orlokC2_final/internal/factory"
+	"orlokC2_final/internal/interfaces"
 	"os"
 	"os/signal"
 	"syscall"
@@ -20,13 +21,13 @@ func main() {
 
 	listenerFactory := factory.NewListenerFactory()
 
-	var listeners []*factory.Listener
+	var listeners []*interfaces.Listener
 
 	for _, addr := range serverAddr {
 		l := listenerFactory.CreateListener(addr)
 		listeners = append(listeners, l)
 
-		go func(l *factory.Listener) {
+		go func(l *interfaces.Listener) {
 			err := l.Start()
 
 			select {
@@ -51,7 +52,7 @@ func main() {
 	fmt.Println("Program exiting gracefully.")
 }
 
-func StopAll(listeners []*factory.Listener, stopChan chan struct{}) {
+func StopAll(listeners []*interfaces.Listener, stopChan chan struct{}) {
 	close(stopChan)
 
 	for _, l := range listeners {
