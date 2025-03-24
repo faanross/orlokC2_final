@@ -21,6 +21,11 @@ type ConcreteListener struct {
 
 func (l *ConcreteListener) Start() error {
 	fmt.Printf("|START|-> Listener %s serving on %s using %s\n", l.ID, l.Addr, l.GetProtocol())
+
+	if l.Protocol == types.H2TLS || l.Protocol == types.H1TLS {
+		return l.Server.ListenAndServeTLS(l.CertFile, l.Keyfile)
+	}
+
 	return l.Server.ListenAndServe()
 }
 

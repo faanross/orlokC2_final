@@ -1,6 +1,7 @@
 package h2tls
 
 import (
+	"crypto/tls"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"math/rand"
@@ -22,6 +23,9 @@ func (lf *ListenerFactory) CreateListener(serverAddr string) *listener.ConcreteL
 	serverInstance := &http.Server{
 		Addr:    serverAddr,
 		Handler: r,
+		TLSConfig: &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		},
 	}
 	fmt.Printf("|CREATE|-> Listener %s configured on %s using %s\n", id, serverAddr, types.ProtocolStringFromType(types.H2TLS))
 

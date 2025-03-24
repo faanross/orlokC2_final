@@ -4,6 +4,7 @@ import (
 	"orlokC2_final/internal/interfaces"
 	"orlokC2_final/internal/listener"
 	"orlokC2_final/internal/protocols/h1c"
+	"orlokC2_final/internal/protocols/h2tls"
 	"orlokC2_final/internal/types"
 )
 
@@ -16,7 +17,8 @@ type AbstractFactory struct {
 func NewAbstractFactory() *AbstractFactory {
 	return &AbstractFactory{
 		factories: map[types.ProtocolType]interfaces.ListenerFactory{
-			types.H1C: &h1c.ListenerFactory{},
+			types.H1C:   &h1c.ListenerFactory{},
+			types.H2TLS: &h2tls.ListenerFactory{},
 			// Other protocols will be added here as they are implemented
 		},
 	}
