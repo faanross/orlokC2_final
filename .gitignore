@@ -32,3 +32,6 @@ Icon
 ._*
 .Spotlight-V100
 .Trashes
+
+# SSL cert
+./certs

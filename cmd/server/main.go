@@ -4,14 +4,22 @@ import (
 	"fmt"
 	"log"
 	"orlokC2_final/internal/factory"
-	"orlokC2_final/internal/interfaces"
+	"orlokC2_final/internal/listener"
+	"orlokC2_final/internal/types"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 )
 
-var serverAddr = []string{":7777", ":8888", ":9999"}
+var listenerConfigs = []struct {
+	Addr     string
+	Protocol types.ProtocolType
+}{
+	{":7777", types.H1C}, // HTTP/1.1 on port 7777
+	{":8888", types.H1C}, // HTTP/1.1 on port 8888
+	{":9999", types.H1C}, // HTTP/1.1 on port 9999
+}
 
 func main() {
 	stopChan := make(chan struct{})
@@ -19,15 +27,15 @@ func main() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
-	listenerFactory := factory.NewListenerFactory()
+	abstractFactory := factory.NewAbstractFactory()
 
-	var listeners []*interfaces.Listener
+	var listeners []*listener.ConcreteListener
 
-	for _, addr := range serverAddr {
-		l := listenerFactory.CreateListener(addr)
+	for _, config := range listenerConfigs {
+		l := abstractFactory.CreateListener(config.Protocol, config.Addr)
 		listeners = append(listeners, l)
 
-		go func(l *interfaces.Listener) {
+		go func(l *listener.ConcreteListener) {
 			err := l.Start()
 
 			select {
@@ -52,7 +60,7 @@ func main() {
 	fmt.Println("Program exiting gracefully.")
 }
 
-func StopAll(listeners []*interfaces.Listener, stopChan chan struct{}) {
+func StopAll(listeners []*listener.ConcreteListener, stopChan chan struct{}) {
 	close(stopChan)
 
 	for _, l := range listeners {

@@ -1,4 +1,4 @@
-package h1c
+package h2tls
 
 import (
 	"fmt"
@@ -23,7 +23,7 @@ func (lf *ListenerFactory) CreateListener(serverAddr string) *listener.ConcreteL
 		Addr:    serverAddr,
 		Handler: r,
 	}
-	fmt.Printf("|CREATE|-> Listener %s configured on %s using %s\n", id, serverAddr, types.ProtocolStringFromType(types.H1C))
+	fmt.Printf("|CREATE|-> Listener %s configured on %s using %s\n", id, serverAddr, types.ProtocolStringFromType(types.H2TLS))
 
 	return &listener.ConcreteListener{
 		ID:       id,

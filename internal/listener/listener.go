@@ -15,10 +15,12 @@ type ConcreteListener struct {
 	Router   *chi.Mux
 	Server   *http.Server
 	Protocol types.ProtocolType
+	CertFile string
+	Keyfile  string
 }
 
 func (l *ConcreteListener) Start() error {
-	fmt.Printf("|START|-> Listener %s serving on %s\n", l.ID, l.Addr)
+	fmt.Printf("|START|-> Listener %s serving on %s using %s\n", l.ID, l.Addr, l.GetProtocol())
 	return l.Server.ListenAndServe()
 }
 
@@ -35,7 +37,7 @@ func (l *ConcreteListener) Stop() error {
 		return fmt.Errorf("error shutting down listener %s: %v", l.ID, err)
 	}
 
-	fmt.Printf("|STOP| Listener %s on %s shut down successfully\n", l.ID, l.Addr)
+	fmt.Printf("|STOP|-> Listener %s on %s using %s shut down successfully\n", l.ID, l.Addr, l.GetProtocol())
 	return nil
 }
 

@@ -2,7 +2,7 @@ package interfaces
 
 import "orlokC2_final/internal/listener"
 
-// Listener interface defines methods that all listener types must implement
+// Listener interface defines methods common to all protocols
 type Listener interface {
 	Start() error
 	Stop() error
@@ -11,7 +11,7 @@ type Listener interface {
 	GetID() string
 }
 
-// ListenerFactory interface defines methods for creating listeners
+// ListenerFactory interface defines methods unique to all protocols
 type ListenerFactory interface {
 	CreateListener(addr string) *listener.ConcreteListener
 }
