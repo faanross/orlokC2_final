@@ -103,7 +103,8 @@ func (a *Agent) runLoop() {
 			body, err := io.ReadAll(resp.Body)
 			resp.Body.Close()
 			if err == nil {
-				fmt.Printf("Response: %s\n", string(body))
+				currentTime := time.Now().Format("2006-01-02 15:04:05.000")
+				fmt.Printf("[%s] Response: %s\n", currentTime, string(body))
 			}
 
 			// Sleep before next check-in

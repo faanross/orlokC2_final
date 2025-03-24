@@ -46,6 +46,12 @@ func main() {
 	agentUUID := uuid.New().String()
 	fmt.Printf("Generated UUID: %s\n", agentUUID)
 
+	err = writeEmbeddedConfig(config, agentUUID)
+	if err != nil {
+		fmt.Printf("Error writing embedded config: %v\n", err)
+		os.Exit(1)
+	}
+
 	// Embed UUID in source code
 	err = embedUUID(agentUUID)
 	if err != nil {
@@ -131,5 +137,51 @@ func embedUUID(uuid string) error {
 		return fmt.Errorf("failed to write UUID file: %v", err)
 	}
 
+	return nil
+}
+
+// writeEmbeddedConfig writes config values to embedded_config.go
+func writeEmbeddedConfig(config *BuildConfig, agentUUID string) error {
+	// Template for the embedded config file
+	template := `// File: internal/agent/config/embedded_config.go
+package config
+
+// EmbeddedValues contains the configuration values embedded during build
+// These values come directly from config.yaml
+var EmbeddedValues = struct {
+	TargetHost string
+	TargetPort int
+	Protocol   string
+	Sleep      int
+	Jitter     int
+	AgentUUID  string
+}{
+	TargetHost: "%s",
+	TargetPort: %d,
+	Protocol:   "%s",
+	Sleep:      %d,
+	Jitter:     %d,
+	AgentUUID:  "%s",
+}
+`
+	// Format template with actual values
+	content := fmt.Sprintf(
+		template,
+		config.Agent.TargetHost,
+		config.Agent.TargetPort,
+		config.Agent.Protocol,
+		config.Agent.Sleep,
+		config.Agent.Jitter,
+		agentUUID,
+	)
+
+	// Write to file
+	filePath := "./internal/agent/config/embedded_config.go"
+	err := ioutil.WriteFile(filePath, []byte(content), 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write embedded config: %v", err)
+	}
+
+	fmt.Println("Configuration values written to embedded_config.go")
 	return nil
 }

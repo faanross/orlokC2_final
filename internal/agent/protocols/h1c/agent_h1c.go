@@ -47,7 +47,7 @@ func (p *H1CProtocol) Connect() error {
 	// and Go's http.Client will automatically handle connection pooling
 	url := fmt.Sprintf("http://%s:%d/", p.targetHost, p.targetPort)
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("HEAD", url, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %v", err)
 	}

