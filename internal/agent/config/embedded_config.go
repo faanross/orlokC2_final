@@ -1,3 +1,4 @@
+// File: internal/agent/config/embedded_config.go
 package config
 
 // EmbeddedValues contains the configuration values embedded during build
@@ -10,10 +11,10 @@ var EmbeddedValues = struct {
 	Jitter     int
 	AgentUUID  string
 }{
-	TargetHost: "PLACEHOLDER_HOST",
-	TargetPort: 0,
-	Protocol:   "PLACEHOLDER_PROTOCOL",
-	Sleep:      0,
-	Jitter:     0,
-	AgentUUID:  "PLACEHOLDER_UUID",
+	TargetHost: "localhost",
+	TargetPort: 7777,
+	Protocol:   "h1c",
+	Sleep:      5,
+	Jitter:     50,
+	AgentUUID:  "76df12f5-e803-4c49-a70a-ab20c367bc01",
 }

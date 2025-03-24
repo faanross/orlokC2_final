@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -49,13 +48,6 @@ func main() {
 	err = writeEmbeddedConfig(config, agentUUID)
 	if err != nil {
 		fmt.Printf("Error writing embedded config: %v\n", err)
-		os.Exit(1)
-	}
-
-	// Embed UUID in source code
-	err = embedUUID(agentUUID)
-	if err != nil {
-		fmt.Printf("Error embedding UUID: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -110,34 +102,6 @@ func loadConfig(path string) (*BuildConfig, error) {
 	}
 
 	return &config, nil
-}
-
-// embedUUID embeds the UUID in the agent source code
-func embedUUID(uuid string) error {
-	// Path to the UUID file
-	uuidFile := "./internal/agent/uuid/uuid.go"
-
-	// Read the file
-	content, err := ioutil.ReadFile(uuidFile)
-	if err != nil {
-		return fmt.Errorf("failed to read UUID file: %v", err)
-	}
-
-	// Replace the placeholder with the actual UUID
-	newContent := strings.Replace(
-		string(content),
-		`var AgentUUID = "00000000-0000-0000-0000-000000000000"`,
-		fmt.Sprintf(`var AgentUUID = "%s"`, uuid),
-		1,
-	)
-
-	// Write back to the file
-	err = ioutil.WriteFile(uuidFile, []byte(newContent), 0644)
-	if err != nil {
-		return fmt.Errorf("failed to write UUID file: %v", err)
-	}
-
-	return nil
 }
 
 // writeEmbeddedConfig writes config values to embedded_config.go
