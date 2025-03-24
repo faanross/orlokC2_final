@@ -1,0 +1,14 @@
+# Agent binary configuration
+binary:
+  name: ""  # If empty, will generate agent_XXXXXX
+  output_dir: "./bin"
+  os: "darwin"  # Options: darwin, linux, windows
+  arch: "arm64"  # Options: amd64, arm64
+
+# Agent runtime configuration
+agent:
+  target_host: "localhost"
+  target_port: 7777
+  protocol: "h1c"  # Options: h1c, h1tls, h2c, h2tls
+  sleep: 10  # Seconds between check-ins
+  jitter: 50  # Percentage of randomness in sleep time
