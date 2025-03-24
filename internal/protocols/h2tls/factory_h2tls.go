@@ -30,6 +30,8 @@ func (lf *ListenerFactory) CreateListener(serverAddr string) *listener.ConcreteL
 		Addr:     serverAddr,
 		Router:   r,
 		Server:   serverInstance,
-		Protocol: types.H1C,
+		Protocol: types.H2TLS,
+		CertFile: "./certs/cert.pem",
+		Keyfile:  "./certs/key.pem",
 	}
 }
