@@ -34,5 +34,5 @@ Icon
 .Trashes
 
 # SSL cert
-certs/*
+certs/
 
