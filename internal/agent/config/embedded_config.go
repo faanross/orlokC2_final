@@ -16,5 +16,5 @@ var EmbeddedValues = struct {
 	Protocol:   "h1c",
 	Sleep:      5,
 	Jitter:     50,
-	AgentUUID:  "76df12f5-e803-4c49-a70a-ab20c367bc01",
+	AgentUUID:  "759f2e2a-276b-4a5a-8bac-70ae4e54c896",
 }

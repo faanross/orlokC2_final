@@ -43,6 +43,7 @@ func (a *Agent) Start() error {
 		a.Config.TargetHost,
 		a.Config.TargetPort,
 		int(a.Config.ConnectionTimeout.Seconds()),
+		a.Config.AgentUUID,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to initialize protocol: %v", err)

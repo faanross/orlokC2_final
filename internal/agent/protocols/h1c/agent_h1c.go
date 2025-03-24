@@ -21,14 +21,18 @@ type H1CProtocol struct {
 
 	// State tracking
 	isConnected bool
+
+	// Agent identity
+	agentUUID string
 }
 
 // Initialize sets up the protocol with the given configuration
-func (p *H1CProtocol) Initialize(targetHost string, targetPort int, timeout int) error {
+func (p *H1CProtocol) Initialize(targetHost string, targetPort int, timeout int, agentUUID string) error {
 	p.targetHost = targetHost
 	p.targetPort = targetPort
 	p.timeout = time.Duration(timeout) * time.Second
 	p.reqTimeout = time.Duration(timeout) * time.Second
+	p.agentUUID = agentUUID
 
 	// Create HTTP client with appropriate timeouts
 	p.client = &http.Client{
@@ -89,6 +93,9 @@ func (p *H1CProtocol) SendRequest(endpoint string) (*http.Response, error) {
 
 	// Add basic headers
 	req.Header.Set("User-Agent", "Mozilla/5.0")
+
+	// Add the Agent UUID as a custom header
+	req.Header.Set("X-Agent-ID", p.agentUUID)
 
 	// Send the request
 	resp, err := p.client.Do(req)

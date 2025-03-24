@@ -8,7 +8,7 @@ import (
 // Protocol defines the interface that all protocol implementations must satisfy
 type Protocol interface {
 	// Initialize sets up the protocol with the given configuration
-	Initialize(targetHost string, targetPort int, timeout int) error
+	Initialize(targetHost string, targetPort int, timeout int, agentUUID string) error
 
 	// Connect establishes a connection to the C2 server
 	Connect() error
