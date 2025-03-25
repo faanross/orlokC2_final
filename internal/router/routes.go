@@ -10,4 +10,8 @@ func SetupRoutes(r chi.Router) {
 
 	// Results endpoint - with GOB decoding middleware
 	r.With(GobDecodingMiddleware).Post("/results", ResultsHandler)
+
+	// Add command endpoints
+	r.Get("/command", CommandEndpoint)
+	r.Post("/result", ResultEndpoint)
 }

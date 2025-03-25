@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -20,13 +21,16 @@ var upgrader = websocket.Upgrader{
 
 // WebSocketServer represents a simple WebSocket server
 type WebSocketServer struct {
-	port int
+	port      int
+	clients   []*websocket.Conn
+	clientsMx sync.Mutex
 }
 
 // NewWebSocketServer creates a new WebSocket server
 func NewWebSocketServer(port int) *WebSocketServer {
 	return &WebSocketServer{
-		port: port,
+		port:    port,
+		clients: make([]*websocket.Conn, 0),
 	}
 }
 
@@ -51,44 +55,76 @@ func (s *WebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.Request
 		log.Printf("Failed to upgrade connection to WebSocket: %v", err)
 		return
 	}
-	defer conn.Close()
 
-	// Log the new connection
+	// Add client to our list
+	s.clientsMx.Lock()
+	s.clients = append(s.clients, conn)
+	s.clientsMx.Unlock()
+
 	fmt.Println("New WebSocket connection established")
 
 	// Send a welcome message
-	err = conn.WriteMessage(websocket.TextMessage, []byte("Connected to Go WebSocket Server"))
-	if err != nil {
-		log.Printf("Error sending message: %v", err)
-		return
+	welcomeMsg := Message{
+		Type:   ResponseMessage,
+		Status: "connected",
 	}
+	conn.WriteJSON(welcomeMsg)
 
-	// Simple message reading loop
+	// Clean up when the connection closes
+	defer func() {
+		conn.Close()
+
+		// Remove client from slice
+		s.clientsMx.Lock()
+		for i, c := range s.clients {
+			if c == conn {
+				// Remove this client (order doesn't matter)
+				s.clients[i] = s.clients[len(s.clients)-1]
+				s.clients = s.clients[:len(s.clients)-1]
+				break
+			}
+		}
+		s.clientsMx.Unlock()
+	}()
+
+	// Message reading loop
 	for {
-		messageType, message, err := conn.ReadMessage()
+		var msg Message
+		err := conn.ReadJSON(&msg)
 		if err != nil {
-			log.Printf("Error reading message: %v", err)
+			// Connection closed or error
 			break
 		}
 
-		// Log the received message
-		log.Printf("Received message: %s", message)
+		log.Printf("Received message: %+v", msg)
 
-		// Echo the message back to the client
-		err = conn.WriteMessage(messageType, message)
-		if err != nil {
-			log.Printf("Error sending message: %v", err)
-			break
+		if msg.Type == CommandMessage {
+			// Process the command
+			ProcessWSCommand(msg)
+
+			// Acknowledge receipt
+			response := Message{
+				Type:    ResponseMessage,
+				AgentID: msg.AgentID,
+				Command: msg.Command,
+				Output:  "Command queued for execution",
+				Status:  "queued",
+			}
+			conn.WriteJSON(response)
 		}
+
 	}
 }
 
+// Global WebSocket server instance
+var GlobalWSServer *WebSocketServer
+
 func StartWebSocketServer() {
 	// Start WebSocket server in a separate goroutine
-	wsServer := NewWebSocketServer(WebSocketPort)
+	GlobalWSServer = NewWebSocketServer(WebSocketPort)
 	fmt.Printf("Starting WebSocket server on port %d...\n", WebSocketPort)
 	go func() {
-		err := wsServer.Start()
+		err := GlobalWSServer.Start()
 		if err != nil {
 			log.Fatalf("WebSocket server error: %v", err)
 		}
@@ -98,4 +134,37 @@ func StartWebSocketServer() {
 	time.Sleep(100 * time.Millisecond)
 	fmt.Println("WebSocket server is running. You can now connect from the web UI.")
 
+}
+
+// Broadcast sends a message to all connected clients
+func (s *WebSocketServer) Broadcast(msg Message) {
+	s.clientsMx.Lock()
+	defer s.clientsMx.Unlock()
+
+	// Send to all clients
+	for i := 0; i < len(s.clients); {
+		conn := s.clients[i]
+		err := conn.WriteJSON(msg)
+
+		if err != nil {
+			// Remove disconnected client
+			s.clients[i] = s.clients[len(s.clients)-1]
+			s.clients = s.clients[:len(s.clients)-1]
+		} else {
+			// Only increment if we didn't remove the current client
+			i++
+		}
+	}
+}
+
+// SendCommandResult broadcasts a command result to all clients
+func (s *WebSocketServer) SendCommandResult(agentID, command, output string) {
+	msg := Message{
+		Type:    ResponseMessage,
+		AgentID: agentID,
+		Command: command,
+		Output:  output,
+		Status:  "completed",
+	}
+	s.Broadcast(msg)
 }
