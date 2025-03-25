@@ -6,6 +6,7 @@ import (
 	"orlokC2_final/internal/factory"
 	"orlokC2_final/internal/listener"
 	"orlokC2_final/internal/types"
+	"orlokC2_final/internal/websocket"
 	"os"
 	"os/signal"
 	"syscall"
@@ -25,6 +26,8 @@ func main() {
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+
+	websocket.StartWebSocketServer()
 
 	abstractFactory := factory.NewAbstractFactory()
 

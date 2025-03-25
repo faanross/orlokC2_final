@@ -7,4 +7,7 @@ func SetupRoutes(r chi.Router) {
 	r.Use(AgentIdentifierMiddleware)
 
 	r.Get("/", RootHandler)
+
+	// Results endpoint - with GOB decoding middleware
+	r.With(GobDecodingMiddleware).Post("/results", ResultsHandler)
 }

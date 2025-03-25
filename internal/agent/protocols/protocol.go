@@ -21,4 +21,7 @@ type Protocol interface {
 
 	// GetType returns the type of protocol being used
 	GetType() types.ProtocolType
+
+	// SendPostRequest sends a POST request with the given data to the C2 server
+	SendPostRequest(endpoint string, data []byte) (*http.Response, error)
 }

