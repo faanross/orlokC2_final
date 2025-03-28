@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"orlokC2_final/internal/middleware"
 	"sync"
 	"time"
 )
@@ -52,7 +53,6 @@ func (cq *CommandQueue) GetCommand() (string, bool) {
 	return cmd, true
 }
 
-// In command_handler_euzqrkrx.go
 func CommandEndpoint(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("[%s] Command endpoint hit by agent\n",
 		time.Now().Format("2006-01-02 15:04:05.000"))
@@ -83,34 +83,45 @@ func CommandEndpoint(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// In command_handler_euzqrkrx.go
 func ResultEndpoint(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("[%s] Result endpoint hit\n",
-		time.Now().Format("2006-01-02 15:04:05.000"))
+	// Get the agent UUID from the request context
+	agentUUID, _ := r.Context().Value(middleware.AgentUUIDKey).(string)
 
-	// Parse the incoming result
-	var result struct {
-		Command string `json:"command"`
-		Output  string `json:"output"`
-		Status  string `json:"status"`
-	}
+	fmt.Printf("[%s] Result endpoint hit by agent: %s\n",
+		time.Now().Format("2006-01-02 15:04:05.000"),
+		agentUUID)
 
+	// Parse the incoming result - use Message type directly
+	var result Message
 	if err := json.NewDecoder(r.Body).Decode(&result); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	fmt.Printf("[%s] Received result:\n  Command: %s\n  Status: %s\n  Output: %s\n",
+	fmt.Printf("[%s] Received result from agent %s:\n  Command: %s\n  Status: %s\n  Output: %s\n",
 		time.Now().Format("2006-01-02 15:04:05.000"),
+		agentUUID,
 		result.Command,
 		result.Status,
 		result.Output)
 
 	// Forward the result to the WebSocket clients
 	if GlobalWSServer != nil {
-		GlobalWSServer.SendCommandResult(result.Command, result.Output)
+		// Update the Message with required fields
+		result.Type = ResponseMessage
+		result.AgentUUID = agentUUID
+		if result.Status == "" {
+			result.Status = "completed"
+		}
+
+		// Broadcast this message directly
+		GlobalWSServer.Broadcast(result)
+
+		fmt.Printf("[%s] Broadcasting result from agent %s to all clients\n",
+			time.Now().Format("2006-01-02 15:04:05.000"),
+			agentUUID)
 	}
 
-	// Send acknowledgment
+	// Send acknowledgment - this is the line causing the error
 	w.WriteHeader(http.StatusOK)
 }

@@ -12,8 +12,9 @@ const (
 
 // Message represents the general message structure
 type Message struct {
-	Type    MessageType `json:"type"`
-	Command string      `json:"command,omitempty"`
-	Output  string      `json:"output,omitempty"`
-	Status  string      `json:"status,omitempty"`
+	Type      MessageType `json:"type"`
+	Command   string      `json:"command,omitempty"`
+	Output    string      `json:"output,omitempty"`
+	Status    string      `json:"status,omitempty"`
+	AgentUUID string      `json:"agentUUID,omitempty"`
 }

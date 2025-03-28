@@ -157,10 +157,12 @@ func (a *Agent) executeCommand(command string) {
 
 	// Create result JSON
 	result := struct {
+		Type    string `json:"type"`
 		Command string `json:"command"`
 		Output  string `json:"output"`
 		Status  string `json:"status"`
 	}{
+		Type:    "response",
 		Command: command,
 		Output:  output,
 		Status:  status,

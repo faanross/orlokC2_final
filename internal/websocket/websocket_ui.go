@@ -88,7 +88,6 @@ func (s *WebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.Request
 	}()
 
 	// Message reading loop
-	// Message reading loop
 	for {
 		var msg Message
 		err := conn.ReadJSON(&msg)
@@ -156,15 +155,4 @@ func (s *WebSocketServer) Broadcast(msg Message) {
 			i++
 		}
 	}
-}
-
-// SendCommandResult broadcasts a command result to all clients
-func (s *WebSocketServer) SendCommandResult(command, output string) {
-	msg := Message{
-		Type:    ResponseMessage,
-		Command: command,
-		Output:  output,
-		Status:  "completed",
-	}
-	s.Broadcast(msg)
 }
