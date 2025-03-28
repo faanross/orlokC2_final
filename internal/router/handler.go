@@ -3,6 +3,7 @@ package router
 import (
 	"fmt"
 	"net/http"
+	"orlokC2_final/internal/middleware"
 	"orlokC2_final/internal/types"
 	"time"
 )
@@ -12,7 +13,7 @@ var currentTime = time.Now().Format("2006-01-02 15:04:05.000")
 func RootHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get the agent UUID from the request context
-	agentUUID, _ := r.Context().Value(AgentUUIDKey).(string)
+	agentUUID, _ := r.Context().Value(middleware.AgentUUIDKey).(string)
 
 	// Log a message with timestamp on the server side
 	fmt.Printf("[%s] Endpoint %s hit by agent %s\n", currentTime, r.URL.Path, agentUUID)
@@ -24,10 +25,10 @@ func RootHandler(w http.ResponseWriter, r *http.Request) {
 // ResultsHandler processes command results from agents
 func ResultsHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the agent UUID from the request context
-	agentUUID, _ := r.Context().Value(AgentUUIDKey).(string)
+	agentUUID, _ := r.Context().Value(middleware.AgentUUIDKey).(string)
 
 	// Get the result from the request context (added by middleware)
-	result, ok := r.Context().Value(ResultKey).(types.CommandResult)
+	result, ok := r.Context().Value(middleware.ResultKey).(types.CommandResult)
 	if !ok {
 		http.Error(w, "Invalid result data", http.StatusBadRequest)
 		return

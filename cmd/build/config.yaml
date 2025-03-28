@@ -11,4 +11,4 @@ agent:
   target_port: 7777
   protocol: "h1c"  # Options: h1c, h1tls, h2c, h2tls
   sleep: 5  # Seconds between check-ins
-  jitter: 50  # Percentage of randomness in sleep time
+  jitter: 20  # Percentage of randomness in sleep time

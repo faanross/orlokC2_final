@@ -1,17 +1,17 @@
 package router
 
-import "github.com/go-chi/chi/v5"
+import (
+	"github.com/go-chi/chi/v5"
+	"orlokC2_final/internal/middleware"
+	"orlokC2_final/internal/websocket"
+)
 
 func SetupRoutes(r chi.Router) {
 	// Apply the middleware to all routes
-	r.Use(AgentIdentifierMiddleware)
+	r.Use(middleware.AgentIdentifierMiddleware)
 
 	r.Get("/", RootHandler)
-
-	// Results endpoint - with GOB decoding middleware
-	r.With(GobDecodingMiddleware).Post("/results", ResultsHandler)
-
-	// Add command endpoints
-	r.Get("/command", CommandEndpoint)
-	r.Post("/result", ResultEndpoint)
+	
+	r.Get("/command", websocket.CommandEndpoint)
+	r.Post("/result", websocket.ResultEndpoint)
 }
