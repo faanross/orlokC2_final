@@ -51,7 +51,7 @@ export default {
 
     // Execute a command
     function executeCommand(command) {
-      websocketService.sendCommand(props.agentId, command);
+      websocketService.sendCommand(command);
     }
 
     // Clear results

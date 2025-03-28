@@ -96,22 +96,6 @@ func (a *Agent) runLoop() {
 				continue
 			}
 
-			// Send request to root endpoint
-			resp, err := a.Protocol.SendRequest("/")
-			if err != nil {
-				fmt.Printf("Request error: %v\n", err)
-				time.Sleep(a.Config.ReconnectDelay)
-				continue
-			}
-
-			// Process response
-			body, err := io.ReadAll(resp.Body)
-			resp.Body.Close()
-			if err == nil {
-				currentTime := time.Now().Format("2006-01-02 15:04:05.000")
-				fmt.Printf("[%s] Response: %s\n", currentTime, string(body))
-			}
-
 			// Check for commands
 			resp2, err := a.Protocol.SendRequest("/command")
 			if err != nil {

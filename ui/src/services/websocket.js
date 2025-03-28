@@ -63,7 +63,7 @@ function connect() {
 }
 
 // Send a command to the server
-function sendCommand(agentId, command) {
+function sendCommand(command) {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
         console.error('Cannot send message, WebSocket not connected');
         return false;
@@ -71,7 +71,6 @@ function sendCommand(agentId, command) {
 
     const message = {
         type: 'command',
-        agentId,
         command
     };
 

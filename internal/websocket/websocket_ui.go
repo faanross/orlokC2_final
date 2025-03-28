@@ -88,6 +88,7 @@ func (s *WebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.Request
 	}()
 
 	// Message reading loop
+	// Message reading loop
 	for {
 		var msg Message
 		err := conn.ReadJSON(&msg)
@@ -99,20 +100,20 @@ func (s *WebSocketServer) handleWebSocket(w http.ResponseWriter, r *http.Request
 		log.Printf("Received message: %+v", msg)
 
 		if msg.Type == CommandMessage {
-			// Process the command
-			ProcessWSCommand(msg)
+			// Queue the command directly instead of calling ProcessWSCommand
+			if msg.Command != "" {
+				AgentCommands.QueueCommand(msg.Command)
 
-			// Acknowledge receipt
-			response := Message{
-				Type:    ResponseMessage,
-				AgentID: msg.AgentID,
-				Command: msg.Command,
-				Output:  "Command queued for execution",
-				Status:  "queued",
+				// Acknowledge receipt
+				response := Message{
+					Type:    ResponseMessage,
+					Command: msg.Command,
+					Output:  "Command queued for execution",
+					Status:  "queued",
+				}
+				conn.WriteJSON(response)
 			}
-			conn.WriteJSON(response)
 		}
-
 	}
 }
 
@@ -158,10 +159,9 @@ func (s *WebSocketServer) Broadcast(msg Message) {
 }
 
 // SendCommandResult broadcasts a command result to all clients
-func (s *WebSocketServer) SendCommandResult(agentID, command, output string) {
+func (s *WebSocketServer) SendCommandResult(command, output string) {
 	msg := Message{
 		Type:    ResponseMessage,
-		AgentID: agentID,
 		Command: command,
 		Output:  output,
 		Status:  "completed",

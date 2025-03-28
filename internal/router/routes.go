@@ -10,8 +10,6 @@ func SetupRoutes(r chi.Router) {
 	// Apply the middleware to all routes
 	r.Use(middleware.AgentIdentifierMiddleware)
 
-	r.Get("/", RootHandler)
-	
 	r.Get("/command", websocket.CommandEndpoint)
 	r.Post("/result", websocket.ResultEndpoint)
 }
