@@ -162,20 +162,8 @@ export default {
   border-radius: 10px;
 }
 
-.status-badge.completed {
-  background-color: #e4f8e9;
-  color: #34c759;
-}
 
-.status-badge.error {
-  background-color: #ffedec;
-  color: #ff3b30;
-}
 
-.status-badge.queued, .status-badge.received {
-  background-color: #e8f0fe;
-  color: #007aff;
-}
 
 .output {
   background-color: #1d1d1d;

@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"fmt"
+	"log"
 	"sync"
 	"time"
 )
@@ -22,10 +23,12 @@ var AgentCommands = CommandQueue{
 func (cq *CommandQueue) QueueCommand(command string) {
 	cq.mu.Lock()
 	defer cq.mu.Unlock()
+
 	cq.PendingCommands = append(cq.PendingCommands, command)
-	fmt.Printf("[%s] Command queued: %s\n",
-		time.Now().Format("2006-01-02 15:04:05.000"),
-		command)
+
+	//fmt.Printf("[%s] Command queued: %s\n", time.Now().Format("2006-01-02 15:04:05.000"), command)
+	log.Printf("Command queued: %s", command)
+
 }
 
 // GetCommand retrieves and removes a command from the queue
