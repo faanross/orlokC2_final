@@ -48,7 +48,7 @@ func ResultHandler(w http.ResponseWriter, r *http.Request) {
 			agentUUID)
 	}
 
-	// Send acknowledgment - this is the line causing the error
+	// Send acknowledgment
 	w.WriteHeader(http.StatusOK)
 }
 

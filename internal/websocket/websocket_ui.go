@@ -151,7 +151,6 @@ func (s *WebSocketServer) Broadcast(msg Message) {
 			s.clients[i] = s.clients[len(s.clients)-1]
 			s.clients = s.clients[:len(s.clients)-1]
 		} else {
-			// Only increment if we didn't remove the current client
 			i++
 		}
 	}
